@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#101115">
+<title>L my ex items</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <!-- Splash / loader -->
+  <section id="splash" class="splash" aria-label="Loading">
+    <div class="splash-media">
+      <img src="video/loader.gif" alt="" width="480" height="852">
+    </div>
+    <div class="splash-copy">
+      <span class="eyebrow">L my ex items</span>
+      <h1 class="splash-title">Turn the gear you own into your <span class="gold-text">next game</span></h1>
+      <p class="splash-sub">Snap your stuff, tell us what you enjoy, and we’ll match you with a sport — plus people nearby who want to play.</p>
+      <button class="btn-gold" data-action="start"><span class="sheen" aria-hidden="true"></span><span>Start matching</span></button>
+      <button class="btn-link" data-action="start-profile">I already have a profile</button>
+    </div>
+  </section>
+
+  <!-- App shell -->
+  <div id="app" class="app" hidden>
+    <nav class="sidebar" aria-label="Sections">
+      <div class="brand"><span class="brand-mark"><span class="gold-text">L</span></span><span class="brand-name">L my ex items</span></div>
+      <span class="side-label">Browse</span>
+      <div class="side-links" id="sideLinks"></div>
+      <div class="side-spacer"></div>
+      <button class="side-profile" data-nav="profile">
+        <span class="avatar sm" id="sideAvatar">AC</span>
+        <span class="side-profile-text"><span id="sideName">Alex Carter</span><small>Gold level</small></span>
+      </button>
+    </nav>
+
+    <main id="view" class="view" tabindex="-1"></main>
+
+    <nav class="tabbar" aria-label="Sections" id="tabbar"></nav>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
