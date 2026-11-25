@@ -33,45 +33,51 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with SingleTickerProviderStateMixin {
   int _tab = 0;
   String? _playersFilter;
+  int _playersRequest = 0;
 
-  void _go(int i) => setState(() {
-        _tab = i;
-        if (i != 1) _playersFilter = null;
-      });
+  // Fades the newly selected tab in. Every tab stays alive in an IndexedStack,
+  // so switching never tears down and rebuilds screens (and keeps scroll/state).
+  late final AnimationController _fade = AnimationController(vsync: this, duration: Motion.base, value: 1);
 
-  Widget _page() {
-    switch (_tab) {
-      case 0:
-        return MatchScreen(onFindPlayers: (String sport) => setState(() {
-              _playersFilter = sport;
-              _tab = 1;
-            }));
-      case 1:
-        return GearScreen(key: ValueKey<String?>(_playersFilter), playersFilter: _playersFilter);
-      case 2:
-        return const GameScreen();
-      case 3:
-        return const AnalyticsScreen();
-      default:
-        return ProfileScreen(onOpenTab: _go);
-    }
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
+
+  void _go(int i) {
+    if (i == _tab) return;
+    setState(() => _tab = i);
+    _fade.forward(from: 0);
+  }
+
+  void _findPlayers(String sport) {
+    setState(() {
+      _playersFilter = sport;
+      _playersRequest++;
+    });
+    _go(1);
   }
 
   @override
   Widget build(BuildContext context) {
     final bool wide = isWide(context);
-    final Widget body = AnimatedSwitcher(
-      duration: Motion.base,
-      switchInCurve: Motion.ease,
-      switchOutCurve: Curves.easeIn,
-      transitionBuilder: (Widget child, Animation<double> a) => FadeTransition(
-        opacity: a,
-        child: SlideTransition(position: Tween<Offset>(begin: const Offset(0, .015), end: Offset.zero).animate(a), child: child),
+    final Widget body = FadeTransition(
+      opacity: CurvedAnimation(parent: _fade, curve: Motion.ease),
+      child: IndexedStack(
+        index: _tab,
+        sizing: StackFit.expand,
+        children: <Widget>[
+          MatchScreen(onFindPlayers: _findPlayers),
+          GearScreen(playersFilter: _playersFilter, playersRequest: _playersRequest),
+          const GameScreen(),
+          const AnalyticsScreen(),
+          ProfileScreen(onOpenTab: _go),
+        ],
       ),
-      child: KeyedSubtree(key: ValueKey<String>('tab-$_tab-$_playersFilter'), child: _page()),
     );
 
     return Scaffold(

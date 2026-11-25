@@ -8,8 +8,9 @@ import '../widgets.dart';
 
 /// Tab 2 — your gear (with photos) and the people you can invite.
 class GearScreen extends StatefulWidget {
-  const GearScreen({super.key, this.playersFilter});
+  const GearScreen({super.key, this.playersFilter, this.playersRequest = 0});
   final String? playersFilter; // set when coming from "Find players"
+  final int playersRequest; // grows each time "Find players" is tapped
 
   @override
   State<GearScreen> createState() => _GearScreenState();
@@ -18,6 +19,15 @@ class GearScreen extends StatefulWidget {
 class _GearScreenState extends State<GearScreen> {
   late bool _showPlayers = widget.playersFilter != null;
   late String _filter = widget.playersFilter ?? kSports.first.name;
+
+  @override
+  void didUpdateWidget(GearScreen old) {
+    super.didUpdateWidget(old);
+    if (widget.playersRequest != old.playersRequest && widget.playersFilter != null) {
+      _showPlayers = true;
+      _filter = widget.playersFilter!;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,26 +162,48 @@ class _PlayersList extends StatelessWidget {
   }
 
   Future<void> _addPerson(BuildContext context, AppState s) async {
-    final TextEditingController c = TextEditingController();
     final String? name = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      builder: (BuildContext ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + MediaQuery.viewInsetsOf(ctx).bottom),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
-          Text('Add a player for $filter', style: TextStyles.h2),
-          const SizedBox(height: 14),
-          AppField(label: 'Full name', controller: c, hint: 'e.g. Maya Brooks', onSubmitted: (String v) => Navigator.pop(ctx, v)),
-          const SizedBox(height: 16),
-          GoldButton(label: 'Add to list', small: true, onPressed: () => Navigator.pop(ctx, c.text)),
-        ]),
-      ),
+      builder: (BuildContext ctx) => _AddPersonSheet(sport: filter),
     );
-    c.dispose();
     final String n = (name ?? '').trim();
     if (n.isEmpty) return;
     s.update(() => s.people.insert(0, Person(id: newId(), name: n, sport: filter)));
     if (context.mounted) showToast(context, '$n added');
+  }
+}
+
+/// Owns its text controller, so it is disposed only after the sheet is gone.
+class _AddPersonSheet extends StatefulWidget {
+  const _AddPersonSheet({required this.sport});
+  final String sport;
+
+  @override
+  State<_AddPersonSheet> createState() => _AddPersonSheetState();
+}
+
+class _AddPersonSheetState extends State<_AddPersonSheet> {
+  final TextEditingController _c = TextEditingController();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
+        Text('Add a player for ${widget.sport}', style: TextStyles.h2),
+        const SizedBox(height: 14),
+        AppField(label: 'Full name', controller: _c, hint: 'e.g. Maya Brooks', onSubmitted: (String v) => Navigator.pop(context, v)),
+        const SizedBox(height: 16),
+        GoldButton(label: 'Add to list', small: true, onPressed: () => Navigator.pop(context, _c.text)),
+      ]),
+    );
   }
 }
 
@@ -315,7 +347,7 @@ class _ItemSheetState extends State<_ItemSheet> {
   }
 
   void _save() {
-    final AppState s = AppScope.of(context);
+    final AppState s = AppScope.read(context);
     final String name = _name.text.trim();
     if (name.isEmpty) {
       showToast(context, 'Give the item a name');

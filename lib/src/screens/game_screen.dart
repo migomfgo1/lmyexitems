@@ -458,8 +458,8 @@ class _ResultSheetState extends State<_ResultSheet> {
                 widget.game.signups = _came;
                 widget.game.rating = _rating;
               });
-              Navigator.pop(context);
               showToast(context, 'Result saved — see Analytics');
+              Navigator.pop(context);
             },
           ),
         ]),

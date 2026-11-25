@@ -70,21 +70,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     }
   }
 
+  // Insets are read in build() and cached, so _push never looks up inherited
+  // widgets from a listener or a platform callback.
+  double _top = 0, _bottom = 0;
+  bool _wide = false;
+
   void _push() {
     final AppState? s = _state;
     if (!_ready || s == null || !mounted) return;
-    final EdgeInsets pad = MediaQuery.paddingOf(context);
-    final bool wide = MediaQuery.sizeOf(context).width >= 768;
     _web.runJavaScript(
-        'window.LApp && window.LApp.render(${s.analyticsJson()}, {top:${pad.top}, bottom:${wide ? pad.bottom : pad.bottom + 84}, wide:$wide});');
+        'window.LApp && window.LApp.render(${s.analyticsJson()}, {top:$_top, bottom:$_bottom, wide:$_wide});');
   }
 
   @override
   Widget build(BuildContext context) {
-    // Re-push insets after rotation / size changes.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _push();
-    });
+    final EdgeInsets pad = MediaQuery.paddingOf(context);
+    final bool wide = MediaQuery.sizeOf(context).width >= 768;
+    final double bottom = wide ? pad.bottom : pad.bottom + 84;
+    if (pad.top != _top || bottom != _bottom || wide != _wide) {
+      _top = pad.top;
+      _bottom = bottom;
+      _wide = wide;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _push());
+    }
     return ColoredBox(color: AppColors.bg, child: WebViewWidget(controller: _web));
   }
 }

@@ -142,7 +142,10 @@ class _MatchScreenState extends State<MatchScreen> {
           controller: _wish,
           maxLines: 3,
           hint: 'e.g. I want to play outdoors with friends on weekends, I like running, not into rough contact',
-          onChanged: (String v) => s.update(() => s.wish = v),
+          onChanged: (String v) {
+            s.wish = v;
+            s.saveQuietly();
+          },
         ),
         const SizedBox(height: 12),
         Wrap(spacing: 8, runSpacing: 8, children: <Widget>[

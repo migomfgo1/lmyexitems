@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -203,6 +204,14 @@ class AppState extends ChangeNotifier {
     _save();
   }
 
+  Timer? _saveTimer;
+
+  /// Save without rebuilding the UI (used while the user is typing).
+  void saveQuietly() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 600), _save);
+  }
+
   int get invitedCount => people.where((Person p) => p.invited).length;
   int get gamesPlayed => games.where((Game g) => g.finished).length;
   int get gamesCreated => games.where((Game g) => !g.sample).length;
@@ -276,6 +285,10 @@ class AppState extends ChangeNotifier {
 class AppScope extends InheritedNotifier<AppState> {
   const AppScope({super.key, required AppState state, required super.child}) : super(notifier: state);
 
+  /// Use in build(): the widget rebuilds when the state changes.
   static AppState of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<AppScope>()!.notifier!;
+
+  /// Use in callbacks (onTap, async code): reads the state without subscribing.
+  static AppState read(BuildContext context) => context.getInheritedWidgetOfExactType<AppScope>()!.notifier!;
 }
